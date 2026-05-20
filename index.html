@@ -693,7 +693,7 @@ response = client.chat.completions.create(
           <li>100k token limit</li>
           <li>Community support</li>
         </ul>
-        <a href="#signup" class="plan-btn plan-btn-ghost">Get started free</a>
+        a href="#signup" class="plan-btn plan-btn-ghost" data-plan="free">Get started free</a>
       </div>
 
       <div class="plan-card featured">
@@ -709,7 +709,7 @@ response = client.chat.completions.create(
           <li>Email support</li>
           <li>Usage dashboard</li>
         </ul>
-        <a href="#signup" class="plan-btn plan-btn-primary">Get Basic</a>
+        <a href="#signup" class="plan-btn plan-btn-primary" data-plan="basic">Get Basic</a>
       </div>
 
       <div class="plan-card">
@@ -725,7 +725,7 @@ response = client.chat.completions.create(
           <li>Usage dashboard</li>
           <li>Higher rate limits</li>
         </ul>
-        <a href="#signup" class="plan-btn plan-btn-ghost">Get Pro</a>
+        <a href="#signup" class="plan-btn plan-btn-ghost" data-plan="pro">Get Pro</a>
       </div>
     </div>
 
@@ -823,6 +823,13 @@ response = client.chat.completions.create(
     }
   });
 </script>
-
+<script>
+  document.querySelectorAll('[data-plan]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const plan = e.currentTarget.dataset.plan;
+      document.querySelector('select[name="plan"]').value = plan;
+    });
+  });
+</script>
 </body>
 </html>
