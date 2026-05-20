@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoodGoodSells AI — API Access</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a24;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --accent: #7c6af7;
+    --accent2: #a594f9;
+    --text: #f0effe;
+    --muted: #8b8a9e;
+    --green: #4ade80;
+    --amber: #fbbf24;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* grid bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* glow orb */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(124,106,247,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+
+  nav .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .logo span { color: var(--accent2); }
+
+  nav a.cta {
+    background: var(--accent);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  nav a.cta:hover { background: var(--accent2); }
+
+  /* HERO */
+  .hero {
+    padding: 100px 0 80px;
+    text-align: center;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(124,106,247,0.1);
+    border: 1px solid rgba(124,106,247,0.25);
+    color: var(--accent2);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 28px;
+  }
+
+  .badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(40px, 6vw, 72px);
+    letter-spacing: -2px;
+    line-height: 1.05;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--accent2);
+  }
+
+  .hero p {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 520px;
+    margin: 0 auto 40px;
+    font-weight: 300;
+  }
+
+  .hero-btns {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    padding: 14px 32px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 15px;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    padding: 14px 32px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 400;
+    font-size: 15px;
+    border: 1px solid var(--border2);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent2); }
+
+  /* CODE PREVIEW */
+  .code-preview {
+    margin: 60px auto 0;
+    max-width: 680px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f56; }
+  .dot-y { background: #ffbd2e; }
+  .dot-g { background: #27c93f; }
+
+  .code-label {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  pre {
+    padding: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    color: #c9d1d9;
+  }
+
+  .k { color: #ff7b72; }
+  .s { color: #a5d6ff; }
+  .c { color: #8b8a9e; }
+  .v { color: #ffa657; }
+  .f { color: #d2a8ff; }
+
+  /* STATS */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 80px 0;
+  }
+
+  .stat {
+    background: var(--bg2);
+    padding: 32px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 36px;
+    color: var(--accent2);
+    letter-spacing: -1px;
+  }
+
+  .stat-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* MODELS */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 4vw, 42px);
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+
+  .section-sub {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 500px;
+    margin-bottom: 48px;
+  }
+
+  .models-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 80px;
+  }
+
+  .model-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+  .model-card:hover { border-color: var(--border2); }
+
+  .model-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: rgba(124,106,247,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    font-size: 20px;
+  }
+
+  .model-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent2);
+    margin-bottom: 6px;
+  }
+
+  .model-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .model-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(124,106,247,0.1);
+    color: var(--accent2);
+    border: 1px solid rgba(124,106,247,0.2);
+  }
+
+  /* PRICING */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 80px;
+  }
+
+  .plan-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+
+  .plan-card.featured {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(124,106,247,0.08) 0%, var(--bg2) 100%);
+  }
+
+  .plan-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 12px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .plan-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .plan-price {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 40px;
+    letter-spacing: -2px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .plan-price span {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+
+  .plan-tokens {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+    margin-bottom: 20px;
+  }
+
+  .plan-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  .plan-features {
+    list-style: none;
+    margin-bottom: 24px;
+  }
+
+  .plan-features li {
+    font-size: 14px;
+    color: var(--muted);
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .plan-features li::before {
+    content: '✓';
+    color: var(--green);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  .plan-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    border: none;
+  }
+
+  .plan-btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .plan-btn-primary:hover { background: var(--accent2); }
+
+  .plan-btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border2);
+  }
+  .plan-btn-ghost:hover { border-color: var(--accent); color: var(--accent2); }
+
+  /* SIGNUP FORM */
+  .signup-section {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 48px;
+    margin-bottom: 80px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  input, select {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 11px 14px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.2s;
+    outline: none;
+    width: 100%;
+  }
+
+  input:focus, select:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+
+  select option { background: var(--bg3); }
+
+  .form-submit {
+    margin-top: 8px;
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .form-submit:hover { background: var(--accent2); transform: translateY(-1px); }
+
+  .form-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+
+  .success-msg {
+    display: none;
+    text-align: center;
+    padding: 32px;
+  }
+
+  .success-msg h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: var(--green);
+  }
+
+  .success-msg p { color: var(--muted); font-size: 15px; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  footer a { color: var(--accent2); text-decoration: none; }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    .form-row { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr; }
+    .signup-section { padding: 28px 20px; }
+    h1 { font-size: 36px; letter-spacing: -1px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a href="#" class="logo">good<span>good</span>sells <span style="color:var(--muted);font-weight:300;font-size:14px">/ AI</span></a>
+    <a href="#signup" class="cta">Get API Key</a>
+  </div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div class="badge">API v1.0 — Now Live</div>
+      <h1>Local AI inference,<br><em>OpenAI compatible</em></h1>
+      <p>Self-hosted Qwen 2.5 14B and LLaVA Vision. Drop-in replacement for OpenAI API. No rate limits on your plan.</p>
+      <div class="hero-btns">
+        <a href="#signup" class="btn-primary">Start for free</a>
+        <a href="#pricing" class="btn-ghost">View pricing</a>
+      </div>
+
+      <div class="code-preview">
+        <div class="code-header">
+          <div class="dot dot-r"></div>
+          <div class="dot dot-y"></div>
+          <div class="dot dot-g"></div>
+          <span class="code-label">python</span>
+        </div>
+        <pre><span class="k">from</span> openai <span class="k">import</span> OpenAI
+
+client = OpenAI(
+    base_url=<span class="s">"https://api.goodgoodsells.com/v1"</span>,
+    api_key=<span class="s">"your-api-key"</span>
+)
+
+response = client.chat.completions.create(
+    model=<span class="s">"qwen2.5:14b"</span>,
+    messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"Hello!"</span>}]
+)
+<span class="f">print</span>(response.choices[<span class="v">0</span>].message.content)</pre>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num">14B</div>
+        <div class="stat-label">Parameter model</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">&lt;1s</div>
+        <div class="stat-label">Avg response time</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">OpenAI compatible</div>
+      </div>
+    </div>
+
+    <!-- MODELS -->
+    <div class="section-label">Models</div>
+    <h2>Two models, one endpoint</h2>
+    <p class="section-sub">Both models are self-hosted on RTX 3090 hardware. No cold starts, no queuing.</p>
+
+    <div class="models-grid">
+      <div class="model-card">
+        <div class="model-icon">🧠</div>
+        <div class="model-name">qwen2.5:14b</div>
+        <div class="model-desc">14 billion parameter language model. Excellent for reasoning, coding, analysis, and general chat.</div>
+        <div class="model-tags">
+          <span class="tag">Chat</span>
+          <span class="tag">Code</span>
+          <span class="tag">Analysis</span>
+          <span class="tag">Reasoning</span>
+        </div>
+      </div>
+      <div class="model-card">
+        <div class="model-icon">👁️</div>
+        <div class="model-name">llama3.2-vision:11b</div>
+        <div class="model-desc">11 billion parameter vision-language model. Understands and describes images, documents, and screenshots.</div>
+        <div class="model-tags">
+          <span class="tag">Vision</span>
+          <span class="tag">Images</span>
+          <span class="tag">Multimodal</span>
+          <span class="tag">OCR</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICING -->
+    <div id="pricing">
+      <div class="section-label">Pricing</div>
+      <h2>Simple, transparent pricing</h2>
+      <p class="section-sub">All plans include both models and full API access. No hidden fees.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <div class="plan-card">
+        <div class="plan-name">Free</div>
+        <div class="plan-price">$0<span>/mo</span></div>
+        <div class="plan-tokens">100,000 tokens / month</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li>Both models included</li>
+          <li>OpenAI compatible API</li>
+          <li>100k token limit</li>
+          <li>Community support</li>
+        </ul>
+        <a href="#signup" class="plan-btn plan-btn-ghost">Get started free</a>
+      </div>
+
+      <div class="plan-card featured">
+        <div class="plan-badge">Most popular</div>
+        <div class="plan-name">Basic</div>
+        <div class="plan-price">$10<span>/mo</span></div>
+        <div class="plan-tokens">1,000,000 tokens / month</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li>Both models included</li>
+          <li>OpenAI compatible API</li>
+          <li>1M token limit</li>
+          <li>Email support</li>
+          <li>Usage dashboard</li>
+        </ul>
+        <a href="#signup" class="plan-btn plan-btn-primary">Get Basic</a>
+      </div>
+
+      <div class="plan-card">
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">$25<span>/mo</span></div>
+        <div class="plan-tokens">5,000,000 tokens / month</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li>Both models included</li>
+          <li>OpenAI compatible API</li>
+          <li>5M token limit</li>
+          <li>Priority support</li>
+          <li>Usage dashboard</li>
+          <li>Higher rate limits</li>
+        </ul>
+        <a href="#signup" class="plan-btn plan-btn-ghost">Get Pro</a>
+      </div>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signup" class="signup-section">
+      <div class="section-label">Get access</div>
+      <h2 style="margin-bottom:8px">Create your account</h2>
+      <p class="section-sub">Your API key will be emailed to you instantly after signup.</p>
+
+      <form id="signupForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>First name</label>
+            <input type="text" name="first_name" placeholder="John" required>
+          </div>
+          <div class="form-group">
+            <label>Last name</label>
+            <input type="text" name="last_name" placeholder="Doe" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Email address</label>
+            <input type="email" name="email" placeholder="john@example.com" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Plan</label>
+            <select name="plan" required>
+              <option value="">Select a plan...</option>
+              <option value="free">Free — 100k tokens/month</option>
+              <option value="basic">Basic — $10/mo — 1M tokens</option>
+              <option value="pro">Pro — $25/mo — 5M tokens</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Use case (optional)</label>
+            <input type="text" name="use_case" placeholder="e.g. chatbot, data analysis, coding assistant...">
+          </div>
+        </div>
+        <button type="submit" class="form-submit" id="submitBtn">Create account & get API key →</button>
+        <p class="form-note">By signing up you agree to our terms. Free plan requires no credit card.</p>
+      </form>
+
+      <div class="success-msg" id="successMsg">
+        <h3>✓ You're in!</h3>
+        <p>Check your email for your API key and getting started guide.<br>Questions? Reply to the email or reach out directly.</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>© 2026 GoodGoodSells · <a href="https://api.goodgoodsells.com/health">API Status</a> · Built with RTX 3090 + Ollama</p>
+  </div>
+</footer>
+
+<script>
+  const BACKEND_URL = 'https://api.goodgoodsells.com/billing/signup';
+
+  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.textContent = 'Processing...';
+    btn.disabled = true;
+
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const resp = await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (resp.ok) {
+        document.getElementById('signupForm').style.display = 'none';
+        document.getElementById('successMsg').style.display = 'block';
+      } else {
+        const err = await resp.json();
+        alert(err.detail || 'Something went wrong. Please try again.');
+        btn.textContent = 'Create account & get API key →';
+        btn.disabled = false;
+      }
+    } catch (err) {
+      alert('Could not connect to server. Please try again.');
+      btn.textContent = 'Create account & get API key →';
+      btn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>
