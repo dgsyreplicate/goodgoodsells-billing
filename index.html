@@ -787,6 +787,75 @@ response = client.chat.completions.create(
 <script>
   const BACKEND_URL = 'https://api.goodgoodsells.com/billing/signup';
 
+  // ── URL param handling ──────────────────────────────────────────────────────
+  (function handleUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const signupSection = document.getElementById('signup');
+    const form = document.getElementById('signupForm');
+    const successMsg = document.getElementById('successMsg');
+
+    if (params.get('verified') === 'true') {
+      signupSection.scrollIntoView({ behavior: 'smooth' });
+      form.style.display = 'none';
+      successMsg.style.display = 'block';
+      successMsg.innerHTML = `
+        <h3>✓ Email verified!</h3>
+        <p>Your API key has been sent to your email inbox.<br>Check your spam folder if you don't see it within a minute.</p>
+      `;
+    } else if (params.get('success') === 'true') {
+      signupSection.scrollIntoView({ behavior: 'smooth' });
+      form.style.display = 'none';
+      successMsg.style.display = 'block';
+      successMsg.innerHTML = `
+        <h3>✓ Payment successful!</h3>
+        <p>Your API key has been sent to your email inbox.<br>Welcome to GoodGoodSells AI!</p>
+      `;
+    } else if (params.get('cancelled') === 'true') {
+      signupSection.scrollIntoView({ behavior: 'smooth' });
+      successMsg.style.display = 'block';
+      successMsg.style.color = 'var(--amber)';
+      successMsg.innerHTML = `
+        <h3 style="color:var(--amber)">Payment cancelled</h3>
+        <p>No charge was made. You can try again below or choose the free plan.</p>
+      `;
+    } else if (params.get('error') === 'invalid_token') {
+      signupSection.scrollIntoView({ behavior: 'smooth' });
+      form.style.display = 'none';
+      successMsg.style.display = 'block';
+      successMsg.innerHTML = `
+        <h3 style="color:#f87171">Invalid verification link</h3>
+        <p>This link is invalid. Please sign up again.</p>
+      `;
+      setTimeout(() => { form.style.display = 'block'; successMsg.style.display = 'none'; }, 3000);
+    } else if (params.get('error') === 'expired') {
+      signupSection.scrollIntoView({ behavior: 'smooth' });
+      form.style.display = 'none';
+      successMsg.style.display = 'block';
+      successMsg.innerHTML = `
+        <h3 style="color:#f87171">Link expired</h3>
+        <p>Your verification link expired (24h limit). Please sign up again.</p>
+      `;
+      setTimeout(() => { form.style.display = 'block'; successMsg.style.display = 'none'; }, 3000);
+    }
+
+    // Clean URL without reload
+    if (params.toString()) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  })();
+
+  // ── Plan pre-selection ──────────────────────────────────────────────────────
+  document.querySelectorAll('[data-plan]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const plan = e.currentTarget.dataset.plan;
+      // Set value after scroll completes
+      setTimeout(() => {
+        document.querySelector('select[name="plan"]').value = plan;
+      }, 100);
+    });
+  });
+
+  // ── Form submit ─────────────────────────────────────────────────────────────
   document.getElementById('signupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
@@ -804,8 +873,22 @@ response = client.chat.completions.create(
       });
 
       if (resp.ok) {
+        const result = await resp.json();
+
+        // Paid plan — redirect to Stripe checkout
+        if (result.checkout_url) {
+          btn.textContent = 'Redirecting to checkout...';
+          window.location.href = result.checkout_url;
+          return;
+        }
+
+        // Free plan — show success
         document.getElementById('signupForm').style.display = 'none';
         document.getElementById('successMsg').style.display = 'block';
+        document.getElementById('successMsg').innerHTML = `
+          <h3>✓ Check your email!</h3>
+          <p>We sent a verification link to <strong>${data.email}</strong>.<br>Click it to receive your API key instantly.</p>
+        `;
       } else {
         const err = await resp.json();
         alert(err.detail || 'Something went wrong. Please try again.');
@@ -817,14 +900,6 @@ response = client.chat.completions.create(
       btn.textContent = 'Create account & get API key →';
       btn.disabled = false;
     }
-  });
-</script>
-<script>
-  document.querySelectorAll('[data-plan]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const plan = e.currentTarget.dataset.plan;
-      document.querySelector('select[name="plan"]').value = plan;
-    });
   });
 </script>
 </body>
